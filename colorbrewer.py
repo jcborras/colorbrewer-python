@@ -4,6 +4,9 @@
 __version__ = '1.0.0'
 VERSION = tuple(map(int, __version__.split('.')))
 
+from re import compile, match
+from unittest import TestCase, main
+
 YlGn = {
     3: ["rgb(247,252,185)", "rgb(173,221,142)", "rgb(49,163,84)"],
     4: ["rgb(255,255,204)", "rgb(194,230,153)", "rgb(120,198,121)", "rgb(35,132,67)"],
@@ -353,8 +356,41 @@ Set3 = {
 }
 qualitative = { 'Pastel2':Pastel2, 'Pastel1':Pastel1, 'Dark2':Dark2, 'Accent':Accent, 'Paired':Paired, 'Set1':Set1, 'Set2':Set2, 'Set3':Set3 }
 
+re = compile(r'rgb\((\d{1,3}),(\d{1,3}),(\d{1,3})\)')
+def html_form(c):
+    """Returns a color suitable for HTML use from a 'rgb(r,g,b)' form"""
+    x=re.match(c)
+    assert x is not None, "Bad RGB form"
+    return reduce(lambda a,b: a+b, map(lambda y : "%0.2x" % int(y), x.groups()), '#')
 
-from bunch import bunchify
-for k, v in globals.items():
-    if isinstance(v, dict): globals()[k] = bunchify(v)
+#from bunch import bunchify
+#for k, v in globals.items():
+#    if isinstance(v, dict): globals()[k] = bunchify(v)
 
+class TestDrive(TestCase):
+    """Use cases for html_form()"""
+    def setUp(self):
+        pass
+    
+    def tearDown(self):
+        pass
+
+    def test1(self):
+        self.assertEqual(html_form('rgb(0,0,0)'), '#000000')
+        self.assertEqual(html_form('rgb(1,2,3)'), '#010203')
+        self.assertEqual(html_form('rgb(10,11,12)'), '#0a0b0c')
+        self.assertEqual(html_form('rgb(255,255,255)'), '#ffffff')
+        self.assertEqual(html_form('rgb(1,14,255)'), '#010eff')
+
+    def test2(self):
+        self.assertRaises(AssertionError, html_form, 'rgb(r,g,b)')
+
+    def test3(self):
+        """Caveats!. But Shouldn't happen if you only use the 'rgb(r,g,b)' forms"""
+        self.assertEqual(html_form('rgb(1,14,256)'), "#010e100")
+        self.assertEqual(html_form('rgb(1,256,256)'), "#01100100")
+        self.assertEqual(html_form('rgb(256,256,256)'),"#100100100")
+    
+if __name__ == '__main__':
+    main()
+    
